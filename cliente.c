@@ -52,3 +52,20 @@ void parse_url(char *url, char **host, int *port, char **path) {
     free(url_copy);
 }
 
+struct addrinfo* resolve_host(const char *host, int port) {
+    struct addrinfo hints, *res;
+    char port_str[6]; 
+    sprintf(port_str, "%d", port);
+
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_family = AF_INET;       
+    hints.ai_socktype = SOCK_STREAM; 
+
+    int status;
+    if ((status = getaddrinfo(host, port_str, &hints, &res)) != 0) {
+        fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(status));
+        exit(1);
+    }
+
+    return res;
+}
