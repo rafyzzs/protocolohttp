@@ -187,3 +187,67 @@ void handle_connection(int client_fd) {
         send_error(client_fd, "403 Forbidden", "Tipo de arquivo não suportado.");
     }
 }
+
+int main(int argc, char *argv[]) {
+    if (argc != 2) {
+        fprintf(stderr, "Uso: %s <diretorio_raiz>\n", argv[0]);
+        exit(1);
+    }
+    base_dir = argv[1];
+
+    int listen_fd, client_fd;
+    struct sockaddr_in serv_addr, cli_addr;
+    socklen_t cli_len = sizeof(cli_addr);
+
+    // 1. Criar o socket de escuta
+    listen_fd = socket(AF_INET, SOCK_STREAM, 0);
+    if (listen_fd < 0) {
+        error_exit("Erro ao criar socket");
+    }
+
+    // Permite reusar o endereço/porta imediatamente (bom para testes)
+    int opt = 1;
+    if (setsockopt(listen_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
+        error_exit("Erro ao configurar setsockopt");
+    }
+
+    // 2. Configurar e "amarrar" (bind) o socket
+    memset(&serv_addr, 0, sizeof(serv_addr));
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_addr.s_addr = INADDR_ANY; // Escutar em todas as interfaces
+    serv_addr.sin_port = htons(PORT);       // Converter para "network byte order"
+
+    if (bind(listen_fd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0) {
+        error_exit("Erro no bind");
+    }
+
+    // 3. Colocar o socket para "escutar" (listen)
+    if (listen(listen_fd, 5) < 0) { // Fila de 5 conexões pendentes
+        error_exit("Erro no listen");
+    }
+
+    printf("Servidor HTTP escutando na porta %d, servindo o diretório '%s'\n", PORT, base_dir);
+    printf("Acesse: http://localhost:%d\n", PORT);
+
+    // 4. Loop principal (aceitar conexões)
+    while (1) {
+        client_fd = accept(listen_fd, (struct sockaddr*)&cli_addr, &cli_len);
+        if (client_fd < 0) {
+            perror("Erro no accept");
+            continue; // Tenta o próximo
+        }
+        
+        printf("Cliente conectado.\n");
+        
+        // Lida com a conexão
+        handle_connection(client_fd);
+
+        // Fecha a conexão com este cliente
+        close(client_fd);
+        printf("Cliente desconectado.\n");
+    }
+
+    // Nunca deve chegar aqui, mas por via das dúvidas
+    close(listen_fd);
+    return 0;
+}
