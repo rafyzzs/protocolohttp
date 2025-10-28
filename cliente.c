@@ -86,3 +86,15 @@ int connect_to_server(struct addrinfo *addr) {
 
     return sockfd;
 }
+
+char* get_filename_from_path(const char *path) {
+    if (strcmp(path, "/") == 0) {
+        return strdup("index.html");
+    }
+
+    char *path_copy = strdup(path);
+    char *filename = basename(path_copy);
+    char *result = strdup(filename);
+    free(path_copy);
+    return result;
+}
