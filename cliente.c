@@ -108,18 +108,14 @@ int main(int argc, char *argv[]) {
     char *host, *path, *filename;
     int port, sockfd;
 
-    // 1. Analisar a URL
     parse_url(argv[1], &host, &port, &path);
     printf("Host: %s, Porta: %d, Caminho: %s\n", host, port, path);
 
-    // 2. Resolver o Host
     struct addrinfo *addr = resolve_host(host, port);
 
-    // 3. Conectar ao Servidor
     sockfd = connect_to_server(addr);
     printf("Conectado ao servidor.\n");
 
-    // 4. Montar e Enviar a Requisição HTTP
     char request_buffer[BUF_SIZE];
     sprintf(request_buffer, "GET %s HTTP/1.1\r\n"
                             "Host: %s\r\n"
@@ -131,56 +127,46 @@ int main(int argc, char *argv[]) {
         error_exit("Erro ao enviar requisição");
     }
 
-    // 5. Receber a Resposta e Salvar o Arquivo
     char response_buffer[BUF_SIZE];
     ssize_t bytes_received;
 
-    // Determina o nome do arquivo de saída
     filename = get_filename_from_path(path);
-    FILE *file = fopen(filename, "wb"); // "wb" -> Write Binary
+    FILE *file = fopen(filename, "wb"); 
     if (file == NULL) {
         error_exit("Erro ao criar arquivo de saída");
     }
 
     printf("Salvando em: %s\n", filename);
 
-    // Flag para saber se já encontramos o fim dos cabeçalhos
     int headers_ended = 0;
     char *body_start = NULL;
 
     while ((bytes_received = recv(sockfd, response_buffer, BUF_SIZE - 1, 0)) > 0) {
-        response_buffer[bytes_received] = '\0'; // Termina a string
+        response_buffer[bytes_received] = '\0'; 
 
         if (!headers_ended) {
-            // Verifica o status (simplificado)
             if (strstr(response_buffer, "HTTP/1.1 200 OK") == NULL) {
                 if (strstr(response_buffer, "HTTP/1.1 404 Not Found") != NULL) {
                     fprintf(stderr, "Erro: Servidor retornou 404 Not Found\n");
                 } else {
                     fprintf(stderr, "Erro: Resposta do servidor não foi 200 OK\n");
-                    // Imprime os primeiros 100 char da resposta para debug
                     fprintf(stderr, "%.100s...\n", response_buffer);
                 }
                 fclose(file);
-                remove(filename); // Remove o arquivo vazio
+                remove(filename); 
                 exit(1);
             }
 
-            // Encontra o fim dos cabeçalhos ("\r\n\r\n")
             body_start = strstr(response_buffer, "\r\n\r\n");
             
             if (body_start) {
                 headers_ended = 1;
-                body_start += 4; // Pula os 4 caracteres de "\r\n\r\n"
+                body_start += 4; 
                 
-                // Calcula o tamanho do corpo *neste primeiro buffer*
                 size_t body_chunk_size = bytes_received - (body_start - response_buffer);
                 fwrite(body_start, 1, body_chunk_size, file);
             }
-            // Se não encontrou, assume que os headers são maiores que o buffer
-            // (para este projeto, assumimos que cabeçalhos cabem em 1 buffer)
         } else {
-            // Já pulamos os cabeçalhos, apenas escreve os dados recebidos
             fwrite(response_buffer, 1, bytes_received, file);
         }
     }
@@ -189,7 +175,6 @@ int main(int argc, char *argv[]) {
         perror("Erro ao receber dados");
     }
 
-    // 6. Limpeza
     fclose(file);
     close(sockfd);
     free(host);
