@@ -7,11 +7,11 @@ CFLAGS = -Wall -g
 all: meu_navegador meu_servidor
 
 # Como construir o cliente
-meu_navegador: client.c
+meu_navegador: cliente.c
 	$(CC) $(CFLAGS) -o meu_navegador cliente.c
 
 # Como construir o servidor
-meu_servidor: server.c
+meu_servidor: servidor.c
 	$(CC) $(CFLAGS) -o meu_servidor servidor.c
 
 # Comando 'make clean' para limpar os arquivos compilados
