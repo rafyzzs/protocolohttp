@@ -122,7 +122,6 @@ void send_dir_listing(int client_fd, const char *dir_path, const char *http_path
     // Fim do HTML
     strcat(body, "</ul></body></html>");
 
-    // Envia a listagem
     send_header(client_fd, "200 OK", "text/html", strlen(body));
     send(client_fd, body, strlen(body), 0);
 }
@@ -130,37 +129,32 @@ void send_dir_listing(int client_fd, const char *dir_path, const char *http_path
 void handle_connection(int client_fd) {
     char buffer[BUF_SIZE];
     
-    // Recebe a requisição (simplificado, assume que cabe em 1 buffer)
     ssize_t bytes_received = recv(client_fd, buffer, BUF_SIZE - 1, 0);
     if (bytes_received <= 0) {
         return; // Erro ou cliente desconectou
     }
     buffer[bytes_received] = '\0';
 
-    // Analisa a requisição (simplificado)
     char method[16], http_path[MAX_PATH];
     if (sscanf(buffer, "%s %s", method, http_path) < 2) {
         send_error(client_fd, "400 Bad Request", "Requisição mal formatada.");
         return;
     }
 
-    // Só aceitamos GET
     if (strcmp(method, "GET") != 0) {
         send_error(client_fd, "501 Not Implemented", "Método não implementado.");
         return;
     }
 
-    // Segurança básica: impede "directory traversal"
     if (strstr(http_path, "..")) {
         send_error(client_fd, "403 Forbidden", "Acesso proibido.");
         return;
     }
     
-    // Monta o caminho completo no sistema de arquivos
     char full_path[MAX_PATH];
     sprintf(full_path, "%s%s", base_dir, http_path);
 
-    // Analisa o que é o caminho (arquivo, diretório ou não existe)
+    // Analisa o que é o caminho 
     struct stat s;
     if (stat(full_path, &s) != 0) {
         // Não existe
@@ -205,7 +199,6 @@ int main(int argc, char *argv[]) {
         error_exit("Erro ao criar socket");
     }
 
-    // Permite reusar o endereço/porta imediatamente (bom para testes)
     int opt = 1;
     if (setsockopt(listen_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
         error_exit("Erro ao configurar setsockopt");
@@ -215,14 +208,14 @@ int main(int argc, char *argv[]) {
     memset(&serv_addr, 0, sizeof(serv_addr));
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_addr.s_addr = INADDR_ANY; // Escutar em todas as interfaces
-    serv_addr.sin_port = htons(PORT);       // Converter para "network byte order"
+    serv_addr.sin_port = htons(PORT);       
 
     if (bind(listen_fd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0) {
         error_exit("Erro no bind");
     }
 
     // 3. Colocar o socket para "escutar" (listen)
-    if (listen(listen_fd, 5) < 0) { // Fila de 5 conexões pendentes
+    if (listen(listen_fd, 5) < 0) { 
         error_exit("Erro no listen");
     }
 
@@ -247,7 +240,6 @@ int main(int argc, char *argv[]) {
         printf("Cliente desconectado.\n");
     }
 
-    // Nunca deve chegar aqui, mas por via das dúvidas
     close(listen_fd);
     return 0;
 }
