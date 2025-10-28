@@ -8,3 +8,47 @@
 #include <netdb.h>      
 #include <errno.h>      
 #include <libgen.h>    
+
+#define BUF_SIZE 8192       // 8 KB
+
+void error_exit(const char *msg) {
+    perror(msg);
+    exit(1);
+}
+
+void parse_url(char *url, char **host, int *port, char **path) {
+    char *url_copy = strdup(url); 
+    char *host_port_path;
+    
+    if (strncmp(url_copy, "http://", 7) == 0) {
+        host_port_path = url_copy + 7;
+    } else {
+        host_port_path = url_copy;
+    }
+
+    char *path_start = strchr(host_port_path, '/');
+    if (path_start) {
+        *path = strdup(path_start); 
+        *path_start = '\0'; 
+    } else {
+        *path = strdup("/"); 
+    }
+
+    char *port_start = strchr(host_port_path, ':');
+    if (port_start) {
+        *port_start = '\0'; 
+        *host = strdup(host_port_path);
+        *port = atoi(port_start + 1); 
+    } else {
+        *host = strdup(host_port_path);
+        *port = 80; 
+    }
+    
+    if (strcmp(*host, "localhost") == 0) {
+        free(*host);
+        *host = strdup("127.0.0.1");
+    }
+
+    free(url_copy);
+}
+
