@@ -16,10 +16,10 @@ make
 
 3. Isso vai gerar dois executáveis, o meu_servidor e o meu_navegador
 
-Para limpar os arquivos compilados, execute:
-4. make clean
+4. Para limpar os arquivos compilados, execute: make clean
 
 Como usar
+
 São necessários dois terminais para a execução do cliente e do servidor
 
 1. Crie um diretório para o servidor servir
@@ -29,4 +29,5 @@ São necessários dois terminais para a execução do cliente e do servidor
 
 3. Agora, é possível usar o meu_navegador para requisitar arquivos do seu servidor por meio do outro terminal:
 ./meu_navegador http://localhost:5050/
+
 ./meu_navegador http://localhost:5050/docs/
