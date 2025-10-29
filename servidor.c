@@ -89,16 +89,36 @@ void send_dir_listing(int client_fd, const char *dir_path, const char *http_path
     char body[BUF_SIZE * 4]; // 32KB
     char entry_path[MAX_PATH];
     
-    // HTML
-    sprintf(body, "<html><head><title>Index of %s</title></head>"
-                  "<body><h1>Index of %s</h1><ul>",
-                  http_path, http_path);
+    strcpy(body, "<html><head>");
+    
+    sprintf(body + strlen(body), "<title>Index of %s</title>", http_path);
+
+    // Bloco de Estilo (CSS) Embutido
+    strcat(body, "<style>\n"
+                 "  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; \n"
+                 "         background-color: #f8f9fa; color: #212529; margin: 2em; }\n"
+                 "  .container { max-width: 800px; margin: 0 auto; padding: 20px; background-color: #fff; \n"
+                 "                 border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }\n"
+                 "  h1 { border-bottom: 2px solid #dee2e6; padding-bottom: 10px; color: #495057; }\n"
+                 "  ul { list-style-type: none; padding: 0; }\n"
+                 "  li { background-color: #fff; margin: 8px 0; border: 1px solid #e9ecef; border-radius: 5px; \n"
+                 "         transition: background-color 0.2s, box-shadow 0.2s; }\n"
+                 "  li a { display: block; padding: 12px 15px; text-decoration: none; color: #007bff; \n"
+                 "         font-weight: 500; }\n"
+                 "  li a:hover { color: #0056b3; }\n"
+                 "  li:hover { background-color: #fdfdfe; box-shadow: 0 2px 5px rgba(0,0,0,0.08); }\n"
+                 "  footer { margin-top: 20px; font-size: 0.9em; color: #868e96; text-align: center; }\n"
+                 "</style>");
+
+    sprintf(body + strlen(body), "</head><body><div class=\"container\"><h1>Index of %s</h1><ul>", http_path);
+
 
     struct dirent *dir_entry;
     while ((dir_entry = readdir(d)) != NULL) {
         if (strcmp(dir_entry->d_name, ".") == 0) continue; 
 
         char link[MAX_PATH];
+
         if (strcmp(http_path, "/") == 0) {
             sprintf(link, "%s", dir_entry->d_name);
         } else {
@@ -119,8 +139,7 @@ void send_dir_listing(int client_fd, const char *dir_path, const char *http_path
     }
     closedir(d);
 
-    // Fim do HTML
-    strcat(body, "</ul></body></html>");
+    strcat(body, "</ul><footer>Servidor HTTP em C</footer></div></body></html>");
 
     send_header(client_fd, "200 OK", "text/html", strlen(body));
     send(client_fd, body, strlen(body), 0);
@@ -131,7 +150,7 @@ void handle_connection(int client_fd) {
     
     ssize_t bytes_received = recv(client_fd, buffer, BUF_SIZE - 1, 0);
     if (bytes_received <= 0) {
-        return; // Erro ou cliente desconectou
+        return; 
     }
     buffer[bytes_received] = '\0';
 
@@ -154,30 +173,27 @@ void handle_connection(int client_fd) {
     char full_path[MAX_PATH];
     sprintf(full_path, "%s%s", base_dir, http_path);
 
-    // Analisa o que é o caminho 
     struct stat s;
     if (stat(full_path, &s) != 0) {
-        // Não existe
+
         send_error(client_fd, "404 Not Found", "Arquivo ou diretório não encontrado.");
     } else if (S_ISDIR(s.st_mode)) {
-        // É um diretório
         
-        // Verifica se /index.html existe dentro dele
         char index_path[MAX_PATH];
         sprintf(index_path, "%s/index.html", full_path);
         
         if (stat(index_path, &s) == 0 && S_ISREG(s.st_mode)) {
-            // index.html existe, envia ele
+        
             send_file(client_fd, index_path);
         } else {
-            // index.html não existe, envia listagem do diretório
+            
             send_dir_listing(client_fd, full_path, http_path);
         }
     } else if (S_ISREG(s.st_mode)) {
-        // É um arquivo regular, envia
+        
         send_file(client_fd, full_path);
     } else {
-        // Outra coisa (link simbólico, socket, etc.)
+        
         send_error(client_fd, "403 Forbidden", "Tipo de arquivo não suportado.");
     }
 }
@@ -193,7 +209,6 @@ int main(int argc, char *argv[]) {
     struct sockaddr_in serv_addr, cli_addr;
     socklen_t cli_len = sizeof(cli_addr);
 
-    // 1. Criar o socket de escuta
     listen_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (listen_fd < 0) {
         error_exit("Erro ao criar socket");
@@ -204,17 +219,15 @@ int main(int argc, char *argv[]) {
         error_exit("Erro ao configurar setsockopt");
     }
 
-    // 2. Configurar e "amarrar" (bind) o socket
     memset(&serv_addr, 0, sizeof(serv_addr));
     serv_addr.sin_family = AF_INET;
-    serv_addr.sin_addr.s_addr = INADDR_ANY; // Escutar em todas as interfaces
+    serv_addr.sin_addr.s_addr = INADDR_ANY; 
     serv_addr.sin_port = htons(PORT);       
 
     if (bind(listen_fd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0) {
         error_exit("Erro no bind");
     }
 
-    // 3. Colocar o socket para "escutar" (listen)
     if (listen(listen_fd, 5) < 0) { 
         error_exit("Erro no listen");
     }
@@ -222,20 +235,17 @@ int main(int argc, char *argv[]) {
     printf("Servidor HTTP escutando na porta %d, servindo o diretório '%s'\n", PORT, base_dir);
     printf("Acesse: http://localhost:%d\n", PORT);
 
-    // 4. Loop principal (aceitar conexões)
     while (1) {
         client_fd = accept(listen_fd, (struct sockaddr*)&cli_addr, &cli_len);
         if (client_fd < 0) {
             perror("Erro no accept");
-            continue; // Tenta o próximo
+            continue; 
         }
         
         printf("Cliente conectado.\n");
         
-        // Lida com a conexão
         handle_connection(client_fd);
 
-        // Fecha a conexão com este cliente
         close(client_fd);
         printf("Cliente desconectado.\n");
     }
