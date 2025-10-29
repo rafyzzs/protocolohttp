@@ -52,13 +52,13 @@ void send_error(int client_fd, const char *status, const char *message) {
 void send_file(int client_fd, const char *filepath) {
     FILE *file = fopen(filepath, "rb");
     if (!file) {
-        send_error(client_fd, "404 Not Found", "Arquivo não encontrado.");
+        send_error(client_fd, "404 Not Found", "Arquivo nao encontrado.");
         return;
     }
 
     struct stat s;
     if (stat(filepath, &s) != 0) {
-        send_error(client_fd, "500 Internal Server Error", "Não foi possível ler o arquivo.");
+        send_error(client_fd, "500 Internal Server Error", "Nao foi possível ler o arquivo.");
         fclose(file);
         return;
     }
