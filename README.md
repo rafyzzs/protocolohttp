@@ -8,8 +8,7 @@ O arquivo padrão é o index.html. Dessa forma, se uma requisição é feita par
 Como compilar
 
 1. Clone o repositório: 
-git clone [URL-DO-SEU-REPOSITORIO]
-cd [NOME-DO-SEU-REPOSITORIO]
+git clone https://github.com/rafyzzs/protocolohttp
 
 2. Execute o make na pasta raiz:
 make

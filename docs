@@ -12,4 +12,4 @@
   li a:hover { color: #0056b3; }
   li:hover { background-color: #fdfdfe; box-shadow: 0 2px 5px rgba(0,0,0,0.08); }
   footer { margin-top: 20px; font-size: 0.9em; color: #868e96; text-align: center; }
-</style></head><body><div class="container"><h1>Index of /docs/</h1><ul><li><a href="/docs//..">../</a></li><li><a href="/docs//Malphite_1.jpg">Malphite_1.jpg</a></li><li><a href="/docs//manual.txt">manual.txt</a></li><li><a href="/docs//rqjwfhkr3bb71.gif">rqjwfhkr3bb71.gif</a></li><li><a href="/docs//Teste">Teste/</a></li><li><a href="/docs//teste.pdf">teste.pdf</a></li><li><a href="/docs//teste.txt">teste.txt</a></li></ul><footer>Servidor HTTP em C</footer></div></body></html>
+</style></head><body><div class="container"><h1>Index of /docs/</h1><ul><li><a href="/docs//..">../</a></li><li><a href="/docs//Malphite_1.jpg">Malphite_1.jpg</a></li><li><a href="/docs//manual.txt">manual.txt</a></li><li><a href="/docs//Teste">Teste/</a></li><li><a href="/docs//teste.pdf">teste.pdf</a></li><li><a href="/docs//teste.txt">teste.txt</a></li></ul><footer>Servidor HTTP em C</footer></div></body></html>
