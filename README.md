@@ -29,5 +29,4 @@ São necessários dois terminais para a execução do cliente e do servidor
 
 3. Agora, é possível usar o meu_navegador para requisitar arquivos do seu servidor por meio do outro terminal:
 ./meu_navegador http://localhost:5050/
-
 ./meu_navegador http://localhost:5050/docs/
